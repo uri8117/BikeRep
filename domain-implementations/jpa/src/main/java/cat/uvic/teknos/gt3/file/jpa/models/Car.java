@@ -76,5 +76,15 @@ public class Car implements cat.uvic.teknos.gt3.domain.models.Car {
     public void setDrivers(Set<cat.uvic.teknos.gt3.domain.models.Driver> drivers) {
         this.drivers = drivers;
     }
+
+    @Override
+    public void addDriver(cat.uvic.teknos.gt3.domain.models.Driver driver) {
+
+    }
+
+    @Override
+    public void clearDrivers() {
+
+    }
 }
 

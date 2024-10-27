@@ -4,6 +4,7 @@ import cat.uvic.teknos.gt3.domain.models.Brand;
 import cat.uvic.teknos.gt3.domain.models.CarData;
 import cat.uvic.teknos.gt3.domain.models.Driver;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class Car implements cat.uvic.teknos.gt3.domain.models.Car {
@@ -13,6 +14,10 @@ public class Car implements cat.uvic.teknos.gt3.domain.models.Car {
     private Brand brand;
     private CarData carData;
     private Set<Driver> drivers;
+
+    public Car() {
+        this.drivers = new HashSet<>(); // Inicializa el conjunto de drivers
+    }
 
     @Override
     public int getId() {
@@ -62,5 +67,15 @@ public class Car implements cat.uvic.teknos.gt3.domain.models.Car {
     @Override
     public void setDrivers(Set<Driver> driver) {
         this.drivers = driver;
+    }
+
+    @Override
+    public void addDriver(Driver driver) {
+        this.drivers.add(driver); // Agrega un conductor al conjunto
+    }
+
+    @Override
+    public void clearDrivers() {
+        this.drivers.clear(); // Limpia el conjunto de conductores
     }
 }

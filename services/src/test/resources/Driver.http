@@ -1,0 +1,34 @@
+# Obtener un `Driver` específico por ID
+GET http://localhost:8080/drivers/1
+
+###
+# Obtener todos los `Driver`
+GET http://localhost:8080/drivers
+
+###
+# Eliminar un `Driver` específico por ID
+DELETE http://localhost:8080/drivers/2
+
+###
+# Crear un nuevo `Driver`
+POST http://localhost:8080/drivers
+Content-Type: application/json
+
+{
+  "firstName": "Lewis",
+  "lastName": "Hamilton",
+  "nationality": "British",
+  "birthdate": "1985-01-07"
+}
+
+###
+# Actualizar un `Driver` específico por ID
+PUT http://localhost:8080/drivers/1
+Content-Type: application/json
+
+{
+  "firstName": "Lewis",
+  "lastName": "Hamilton",
+  "nationality": "British",
+  "birthdate": "1985-01-07"
+}

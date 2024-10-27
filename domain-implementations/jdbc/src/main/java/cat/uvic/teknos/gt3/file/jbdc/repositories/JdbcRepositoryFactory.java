@@ -10,7 +10,7 @@ import java.util.Properties;
 
 public class JdbcRepositoryFactory implements RepositoryFactory {
 
-    private Connection connection;
+    private final Connection connection;
     public JdbcRepositoryFactory(){
         try {
             var properties = new Properties();
@@ -26,37 +26,37 @@ public class JdbcRepositoryFactory implements RepositoryFactory {
     }
 
     @Override
-    public BrandRepository getBrandRepository() throws SQLException {
+    public BrandRepository getBrandRepository() {
+        return new JdbcBrandRepository(connection);
+    }
+
+    @Override
+    public BrandDataRepository getBrandDataRepository() {
         return null;
     }
 
     @Override
-    public BrandDataRepository getBrandDataRepository() throws SQLException {
-        return null;
-    }
-
-    @Override
-    public CarRepository getCarRepository() throws SQLException {
+    public CarRepository getCarRepository() {
         return new JdbcCarRepository(connection);
     }
 
     @Override
-    public CarDataRepository getCarDataRepository() throws SQLException {
+    public CarDataRepository getCarDataRepository() {
         return null;
     }
 
     @Override
-    public CircuitRepository getCircuitRepository() throws SQLException {
-        return null;
+    public CircuitRepository getCircuitRepository() {
+        return new JdbcCircuitRepository(connection);
     }
 
     @Override
-    public DriverRepository getDriverRepository() throws SQLException {
-        return null;
+    public DriverRepository getDriverRepository() {
+        return new JdbcDriverRepository(connection);
     }
 
     @Override
-    public RaceRepository getRaceRepository() throws SQLException {
+    public RaceRepository getRaceRepository() {
         return new JdbcRaceRepository(connection);
     }
 }

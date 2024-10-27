@@ -1,0 +1,54 @@
+# Obtener un `Circuit` específico por ID
+GET http://localhost:8080/circuits/1
+
+###
+# Obtener todos los `Circuit`
+GET http://localhost:8080/circuits
+
+###
+# Eliminar un `Circuit` específico por ID
+DELETE http://localhost:8080/circuits/2
+
+###
+# Crear un nuevo `Circuit`
+POST http://localhost:8080/circuits
+Content-Type: application/json
+
+{
+  "name": "Monza",
+  "location": "Italy",
+  "length": 5.793
+}
+
+###
+# Crear otro `Circuit`
+POST http://localhost:8080/circuits
+Content-Type: application/json
+
+{
+  "name": "Silverstone",
+  "location": "UK",
+  "length": 5.891
+}
+
+###
+# Actualizar un `Circuit` específico por ID
+PUT http://localhost:8080/circuits/1
+Content-Type: application/json
+
+{
+  "name": "Updated Monza",
+  "location": "Italy",
+  "length": 5.793
+}
+
+###
+# Actualizar `Circuit` específico con nuevo nombre y longitud
+PUT http://localhost:8080/circuits/3
+Content-Type: application/json
+
+{
+  "name": "Updated Silverstone",
+  "location": "UK",
+  "length": 5.892
+}

@@ -1,0 +1,49 @@
+# Obtener un `Brand` específico por ID
+GET http://localhost:8080/brands/1
+
+###
+# Obtener todos los `Brand`
+GET http://localhost:8080/brands
+
+###
+# Eliminar un `Brand` específico por ID
+DELETE http://localhost:8080/brands/2
+
+###
+# Crear otro `Brand` con `brandData` detallado
+POST http://localhost:8080/brands
+Content-Type: application/json
+
+{
+  "brandName": "Lamborghini",
+  "brandData": {
+    "countryOfOrigin": "Italy",
+    "contactInfo": "contact@lamborghini.com"
+  }
+}
+
+###
+# Actualizar un `Brand` específico por ID (sin modificar `brandData`)
+PUT http://localhost:8080/brands/1
+Content-Type: application/json
+
+{
+  "brandName": "Updated Toyota",
+  "brandData": {
+    "countryOfOrigin": "Japan",
+    "contactInfo": "contact@toyota.com"
+  }
+}
+
+###
+# Actualizar `Brand` por ID (modificando `brandData`)
+PUT http://localhost:8080/brands/3
+Content-Type: application/json
+
+{
+  "brandName": "Updated Ferrari",
+  "brandData": {
+    "countryOfOrigin": "Italy",
+    "contactInfo": "support@ferrari.com"
+  }
+}

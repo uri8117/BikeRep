@@ -29,6 +29,7 @@
             <option value="$PROJECT_DIR$/domainImplementation" />
             <option value="$PROJECT_DIR$/domainImplementation/src" />
             <option value="$PROJECT_DIR$/domainImplementation/src/main.java" />
+            <option value="$PROJECT_DIR$/services" />
             <option value="$PROJECT_DIR$/utilities" />
           </set>
         </option>

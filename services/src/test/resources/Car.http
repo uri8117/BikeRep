@@ -1,0 +1,93 @@
+# Obtener un `Car` específico por ID
+GET http://localhost:8080/cars/1
+
+###
+# Obtener todos los `Car`
+GET http://localhost:8080/cars
+
+###
+# Eliminar un `Car` específico por ID
+DELETE http://localhost:8080/cars/3
+
+###
+# Crear un nuevo `Car` con `CarData` detallado
+POST http://localhost:8080/cars
+Content-Type: application/json
+
+{
+  "modelName": "Aventador",
+  "carData": {
+    "horsepower": 730,
+    "weight": 1575
+  },
+  "brand": {
+    "id": 1
+  },
+  "drivers": []
+}
+
+### NOT WORKING
+# Crear un nuevo `Car` con `CarData` detallado
+POST http://localhost:8080/cars
+Content-Type: application/json
+
+{
+  "modelName": "Aventador",
+  "carData": {
+    "horsepower": 730,
+    "weight": 1575
+  },
+  "brand": {
+    "id": 1
+  },
+  "drivers": [
+    {
+      "id": 1
+    },
+    {
+      "id": 2
+    }
+  ]
+}
+
+###
+# Actualizar un `Car` específico por ID (sin modificar `carData`)
+PUT http://localhost:8080/cars/1
+Content-Type: application/json
+
+{
+  "modelName": "Updated Model Name",
+  "carData": {
+    "horsepower": 730,
+    "weight": 1575
+  },
+  "brand": {
+    "id": 1
+  },
+  "drivers": [
+    {
+      "id": 1
+    }
+  ]
+}
+
+###
+# Actualizar `Car` por ID (modificando `carData`)
+PUT http://localhost:8080/cars/4
+Content-Type: application/json
+
+{
+  "modelName": "Updated Ferrari",
+  "carData": {
+    "horsepower": 800,
+    "weight": 1475
+  },
+  "brand": {
+    "id": 2
+  },
+  "drivers": [
+    {
+      "id": 2
+    }
+  ]
+}

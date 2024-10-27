@@ -5,18 +5,18 @@ import java.sql.SQLException;
 
 public interface RepositoryFactory {
 
-    BrandRepository getBrandRepository() throws SQLException;
+    BrandRepository getBrandRepository();
 
-    BrandDataRepository getBrandDataRepository() throws SQLException;
+    BrandDataRepository getBrandDataRepository();
 
-    CarRepository getCarRepository() throws SQLException;
+    CarRepository getCarRepository();
 
-    CarDataRepository getCarDataRepository() throws SQLException;
+    CarDataRepository getCarDataRepository();
 
-    CircuitRepository getCircuitRepository() throws SQLException;
+    CircuitRepository getCircuitRepository();
 
-    DriverRepository getDriverRepository() throws SQLException;
+    DriverRepository getDriverRepository();
 
-    RaceRepository getRaceRepository() throws SQLException;
+    RaceRepository getRaceRepository();
 
 }

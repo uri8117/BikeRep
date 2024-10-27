@@ -63,8 +63,8 @@ CREATE TABLE IF NOT EXISTS RACE (
                                     ID_RACE INT PRIMARY KEY AUTO_INCREMENT,
                                     ID_CIRCUIT INT NOT NULL,
                                     RACE_NAME VARCHAR(50) NOT NULL,
-                                    RACE_DATE DATE NOT NULL,
-                                    FOREIGN KEY (ID_CIRCUIT) REFERENCES CIRCUIT(ID_CIRCUIT) ON DELETE CASCADE
+    RACE_DATE DATE NOT NULL,
+    FOREIGN KEY (ID_CIRCUIT) REFERENCES CIRCUIT(ID_CIRCUIT) ON DELETE CASCADE
     );
 
 -- Table for the many-to-many relationship between races and drivers with additional attributes
@@ -73,6 +73,6 @@ CREATE TABLE IF NOT EXISTS RACE_DRIVER (
                                            ID_DRIVER INT NOT NULL,
                                            POSITION INT NOT NULL,
                                            PRIMARY KEY (ID_RACE, ID_DRIVER),
-                                           FOREIGN KEY (ID_RACE) REFERENCES RACE(ID_RACE) ON DELETE CASCADE,
-                                           FOREIGN KEY (ID_DRIVER) REFERENCES DRIVER(ID_DRIVER) ON DELETE CASCADE
+    FOREIGN KEY (ID_RACE) REFERENCES RACE(ID_RACE) ON DELETE CASCADE,
+    FOREIGN KEY (ID_DRIVER) REFERENCES DRIVER(ID_DRIVER) ON DELETE CASCADE
     );

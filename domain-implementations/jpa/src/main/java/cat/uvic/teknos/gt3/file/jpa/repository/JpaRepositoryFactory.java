@@ -25,37 +25,37 @@ public class JpaRepositoryFactory implements RepositoryFactory {
     }
 
     @Override
-    public BrandRepository getBrandRepository() throws SQLException {
+    public BrandRepository getBrandRepository() {
         return new JpaBrandRepository(entityManagerFactory);
     }
 
     @Override
-    public BrandDataRepository getBrandDataRepository() throws SQLException {
+    public BrandDataRepository getBrandDataRepository() {
         return new JpaBrandDataRepository(entityManagerFactory);
     }
 
     @Override
-    public CarRepository getCarRepository() throws SQLException {
+    public CarRepository getCarRepository() {
         return new JpaCarRepository(entityManagerFactory);
     }
 
     @Override
-    public CarDataRepository getCarDataRepository() throws SQLException {
+    public CarDataRepository getCarDataRepository() {
         return new JpaCarDataRepository(entityManagerFactory);
     }
 
     @Override
-    public CircuitRepository getCircuitRepository() throws SQLException {
+    public CircuitRepository getCircuitRepository() {
         return new JpaCircuitRepository(entityManagerFactory);
     }
 
     @Override
-    public DriverRepository getDriverRepository() throws SQLException {
+    public DriverRepository getDriverRepository() {
         return new JpaDriverRepository(entityManagerFactory);
     }
 
     @Override
-    public RaceRepository getRaceRepository() throws SQLException {
+    public RaceRepository getRaceRepository() {
         return new JpaRaceRepository(entityManagerFactory);
     }
 }

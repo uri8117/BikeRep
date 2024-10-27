@@ -32,27 +32,36 @@ public class JdbcCarRepository implements CarRepository {
     }
 
     private void insert(Car model) {
-        try (var preparedStatement = connection.prepareStatement(INSERT_CAR, Statement.RETURN_GENERATED_KEYS)) {
+        try {
             connection.setAutoCommit(false);
-            preparedStatement.setInt(1, model.getBrand().getId());
-            preparedStatement.setString(2, model.getModelName());
-            preparedStatement.executeUpdate();
+            try (var preparedStatement = connection.prepareStatement(INSERT_CAR, Statement.RETURN_GENERATED_KEYS)) {
+                preparedStatement.setInt(1, model.getBrand().getId());
+                preparedStatement.setString(2, model.getModelName());
+                preparedStatement.executeUpdate();
 
-            var keys = preparedStatement.getGeneratedKeys();
-            if (keys.next()) {
-                model.setId(keys.getInt(1));
-                createDataForCar(model.getId(), model.getCarData());
-            } else {
-                throw new SQLException("Creating car failed, no ID obtained.");
-            }
-
-            if (model.getDrivers() != null) {
-                for (Driver driver : model.getDrivers()) {
-                    insertCarDriver(model.getId(), driver);
+                var keys = preparedStatement.getGeneratedKeys();
+                if (keys.next()) {
+                    model.setId(keys.getInt(1));
+                } else {
+                    throw new SQLException("Creating car failed, no ID obtained.");
                 }
-            }
 
-            connection.commit();
+                // Asegúrate de que carData no sea nulo
+                if (model.getCarData() != null) {
+                    createDataForCar(model.getId(), model.getCarData());
+                } else {
+                    throw new IllegalArgumentException("CarData cannot be null");
+                }
+
+                // Manejo de conductores
+                if (model.getDrivers() != null && !model.getDrivers().isEmpty()) {
+                    for (Driver driver : model.getDrivers()) {
+                        insertCarDriver(model.getId(), driver);
+                    }
+                }
+
+                connection.commit();
+            }
         } catch (SQLException e) {
             rollback();
             throw new RuntimeException(e);
@@ -83,22 +92,25 @@ public class JdbcCarRepository implements CarRepository {
     }
 
     private void update(Car model) {
-        try (var carStatement = connection.prepareStatement("UPDATE CAR SET MODEL_NAME = ? WHERE ID_CAR = ?")) {
+        try {
             connection.setAutoCommit(false);
-            carStatement.setString(1, model.getModelName());
-            carStatement.setInt(2, model.getId());
-            carStatement.executeUpdate();
+            try (var carStatement = connection.prepareStatement("UPDATE CAR SET MODEL_NAME = ? WHERE ID_CAR = ?")) {
+                carStatement.setString(1, model.getModelName());
+                carStatement.setInt(2, model.getId());
+                carStatement.executeUpdate();
 
-            updateCarData(model.getCarData(), model.getId());
+                updateCarData(model.getCarData(), model.getId());
 
-            if (model.getDrivers() != null) {
+                // Manejo de conductores
                 deleteCarDrivers(model.getId());
-                for (Driver driver : model.getDrivers()) {
-                    insertCarDriver(model.getId(), driver);
+                if (model.getDrivers() != null && !model.getDrivers().isEmpty()) {
+                    for (Driver driver : model.getDrivers()) {
+                        insertCarDriver(model.getId(), driver);
+                    }
                 }
-            }
 
-            connection.commit();
+                connection.commit();
+            }
         } catch (SQLException e) {
             rollback();
             throw new RuntimeException(e);
@@ -129,11 +141,13 @@ public class JdbcCarRepository implements CarRepository {
 
     @Override
     public void delete(Car model) {
-        try (var preparedStatement = connection.prepareStatement("DELETE FROM CAR WHERE ID_CAR = ?")) {
+        try {
             connection.setAutoCommit(false);
-            preparedStatement.setInt(1, model.getId());
-            preparedStatement.executeUpdate();
-            connection.commit();
+            try (var preparedStatement = connection.prepareStatement("DELETE FROM CAR WHERE ID_CAR = ?")) {
+                preparedStatement.setInt(1, model.getId());
+                preparedStatement.executeUpdate();
+                connection.commit();
+            }
         } catch (SQLException e) {
             rollback();
             throw new RuntimeException(e);
@@ -153,7 +167,6 @@ public class JdbcCarRepository implements CarRepository {
              var brandStatement = connection.prepareStatement(queryBrand)) {
 
             statement.setInt(1, id);
-            carDataStatement.setInt(1, id);
             var resultSet = statement.executeQuery();
 
             if (resultSet.next()) {
@@ -166,7 +179,7 @@ public class JdbcCarRepository implements CarRepository {
                 var brandResultSet = brandStatement.executeQuery();
 
                 if (brandResultSet.next()) {
-                    Brand brand = new cat.uvic.teknos.gt3.file.jbdc.models.Brand();
+                    Brand brand = new Brand();
                     brand.setId(brandResultSet.getInt("ID_BRAND"));
                     brand.setBrandName(brandResultSet.getString("BRAND_NAME"));
                     car.setBrand(brand);
@@ -190,34 +203,8 @@ public class JdbcCarRepository implements CarRepository {
             throw new RuntimeException(e);
         }
 
-        return null;
+        return null; // Retorna null si no se encuentra el coche
     }
-
-
-//    private Car getCar(PreparedStatement userDataStatement, ResultSet resultSet) throws SQLException {
-//        var resultSetData = userDataStatement.executeQuery();
-//        if (resultSet.next()) {
-//
-//            Car result = new cat.uvic.teknos.gt3.file.jbdc.models.Car();
-//            result.setId(resultSet.getInt("ID_CAR"));
-//            result.setModelName(resultSet.getString("MODEL_NAME"));
-//
-//            getCarData(resultSetData, result);
-//
-//            return result;
-//        }
-//        return null;
-//    }
-//
-//    private void getCarData(ResultSet resultSetData, Car car) throws SQLException {
-//        if(resultSetData.next()){
-//            CarData carData = new cat.uvic.teknos.gt3.file.jbdc.models.CarData();
-//            carData.setId(resultSetData.getInt("ID_CAR"));
-//            carData.setHorsepower(resultSetData.getInt("HORSEPOWER"));
-//            carData.setWeight(resultSetData.getInt("WEIGHT"));
-//            car.setCarData(carData);
-//        }
-//    }
 
     @Override
     public Set<Car> getAll() {
@@ -229,7 +216,7 @@ public class JdbcCarRepository implements CarRepository {
              var carDataStatement = connection.prepareStatement(queryCarData);
              var brandStatement = connection.prepareStatement(queryBrand)) {
 
-            var cars = new HashSet<Car>();
+            Set<Car> cars = new HashSet<>();
             var carResultSet = carStatement.executeQuery();
 
             while (carResultSet.next()) {
@@ -242,9 +229,9 @@ public class JdbcCarRepository implements CarRepository {
                 var brandResultSet = brandStatement.executeQuery();
 
                 if (brandResultSet.next()) {
-                    Brand brand = new cat.uvic.teknos.gt3.file.jbdc.models.Brand();
+                    Brand brand = new Brand();
                     brand.setId(brandResultSet.getInt("ID_BRAND"));
-                    brand.setBrandName(brandResultSet.getString("BRAND_NAME")); // Asumiendo que hay un campo NAME en la tabla BRAND
+                    brand.setBrandName(brandResultSet.getString("BRAND_NAME"));
                     car.setBrand(brand);
                 }
 

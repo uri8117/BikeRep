@@ -11,7 +11,7 @@ plugins {
 }
 
 rootProject.name = "gt3"
-include("app", "domain", "utilities", ":domain-implementations:file", ":domain-implementations:jdbc")
+include("app", "domain", "utilities", ":domain-implementations:file", ":domain-implementations:jdbc", "services")
 include("domain-implementations:jpa")
 findProject(":domain-implementations:jpa")?.name = "jpa"
 include("domainImplementation:src:main.java")

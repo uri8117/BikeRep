@@ -131,7 +131,8 @@ public class JdbcRaceRepository implements RaceRepository {
     @Override
     public Race get(Integer id) {
         try (PreparedStatement raceStatement = connection.prepareStatement(SELECT_RACE);
-             PreparedStatement raceDriversStatement = connection.prepareStatement(SELECT_RACE_DRIVERS)) {
+             PreparedStatement raceDriversStatement = connection.prepareStatement(SELECT_RACE_DRIVERS);
+             PreparedStatement circuitStatement = connection.prepareStatement("SELECT * FROM CIRCUIT WHERE ID_CIRCUIT = ?")){
 
             raceStatement.setInt(1, id);
             ResultSet raceResultSet = raceStatement.executeQuery();
@@ -142,10 +143,18 @@ public class JdbcRaceRepository implements RaceRepository {
                 race.setRaceName(raceResultSet.getString("RACE_NAME"));
                 race.setRaceDate(raceResultSet.getDate("RACE_DATE"));
 
-                // Retrieve circuit information
-                var circuit = new cat.uvic.teknos.gt3.file.jbdc.models.Circuit();
-                circuit.setId(raceResultSet.getInt("ID_CIRCUIT"));
-                race.setCircuit(circuit);
+                // Obtener información del circuito
+                int circuitId = raceResultSet.getInt("ID_CIRCUIT");
+                circuitStatement.setInt(1, circuitId);
+                ResultSet circuitResultSet = circuitStatement.executeQuery();
+                if (circuitResultSet.next()) {
+                    var circuit = new cat.uvic.teknos.gt3.file.jbdc.models.Circuit();
+                    circuit.setId(circuitId);
+                    circuit.setCircuitName(circuitResultSet.getString("CIRCUIT_NAME")); // Asegúrate de que el nombre del campo sea correcto
+                    circuit.setCountry(circuitResultSet.getString("COUNTRY"));
+                    circuit.setLengthKm(circuitResultSet.getDouble("LENGTH_KM"));
+                    race.setCircuit(circuit);
+                }
 
                 // Retrieve race drivers
                 raceDriversStatement.setInt(1, race.getId());
@@ -174,7 +183,8 @@ public class JdbcRaceRepository implements RaceRepository {
     public Set<Race> getAll() {
         Set<Race> races = new HashSet<>();
         try (Statement statement = connection.createStatement();
-             PreparedStatement raceDriversStatement = connection.prepareStatement(SELECT_RACE_DRIVERS)) {
+             PreparedStatement raceDriversStatement = connection.prepareStatement(SELECT_RACE_DRIVERS);
+             PreparedStatement circuitStatement = connection.prepareStatement("SELECT * FROM CIRCUIT WHERE ID_CIRCUIT = ?")) {
 
             ResultSet raceResultSet = statement.executeQuery(SELECT_ALL_RACES);
             while (raceResultSet.next()) {
@@ -183,10 +193,18 @@ public class JdbcRaceRepository implements RaceRepository {
                 race.setRaceName(raceResultSet.getString("RACE_NAME"));
                 race.setRaceDate(raceResultSet.getDate("RACE_DATE"));
 
-                // Retrieve circuit information
-                var circuit = new cat.uvic.teknos.gt3.file.jbdc.models.Circuit();
-                circuit.setId(raceResultSet.getInt("ID_CIRCUIT"));
-                race.setCircuit(circuit);
+                // Obtener información del circuito
+                int circuitId = raceResultSet.getInt("ID_CIRCUIT");
+                circuitStatement.setInt(1, circuitId);
+                ResultSet circuitResultSet = circuitStatement.executeQuery();
+                if (circuitResultSet.next()) {
+                    var circuit = new cat.uvic.teknos.gt3.file.jbdc.models.Circuit();
+                    circuit.setId(circuitId);
+                    circuit.setCircuitName(circuitResultSet.getString("CIRCUIT_NAME"));
+                    circuit.setCountry(circuitResultSet.getString("COUNTRY"));
+                    circuit.setLengthKm(circuitResultSet.getDouble("LENGTH_KM"));
+                    race.setCircuit(circuit);
+                }
 
                 // Retrieve race drivers
                 raceDriversStatement.setInt(1, race.getId());

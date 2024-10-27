@@ -17,4 +17,7 @@ public interface Car {
 
     Set<Driver> getDrivers();
     void setDrivers(Set<Driver> drivers);
+
+    public void addDriver(Driver driver);
+    public void clearDrivers();
 }
