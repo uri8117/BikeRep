@@ -1,6 +1,5 @@
 package cat.uvic.teknos.gt3.clients.console.utils;
 
-import cat.uvic.teknos.gt3.clients.console.dto.CircuitDto;
 import cat.uvic.teknos.gt3.clients.console.exceptions.RequestException;
 import cat.uvic.teknos.gt3.domain.models.Circuit;
 import com.fasterxml.jackson.core.JsonProcessingException;

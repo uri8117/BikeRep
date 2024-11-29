@@ -2,7 +2,6 @@ package cat.uvic.teknos.gt3.services;
 
 import cat.uvic.teknos.gt3.domain.models.ModelFactory;
 import cat.uvic.teknos.gt3.domain.repositories.RepositoryFactory;
-import cat.uvic.teknos.gt3.file.jbdc.repositories.JdbcRaceRepository;
 import cat.uvic.teknos.gt3.services.controllers.*;
 
 import java.io.IOException;
@@ -19,11 +18,9 @@ public class App {
         ModelFactory modelFactory = (ModelFactory) Class.forName(properties.getProperty("modelFactory")).getConstructor().newInstance();
 
         var controllers = new HashMap<String, Controller>();
-        controllers.put("drivers", new DriverController(repositoryFactory, modelFactory));
+        controllers.put("bikes", new BikeController(repositoryFactory, modelFactory));
         controllers.put("brands", new BrandController(repositoryFactory, modelFactory));
-        controllers.put("circuits", new CircuitController(repositoryFactory, modelFactory));
-        controllers.put("cars", new CarController(repositoryFactory, modelFactory));
-        controllers.put("races", new RaceController(repositoryFactory, modelFactory));
+        controllers.put("users", new UserController(repositoryFactory, modelFactory));
 
         var requestRouter = new RequestRouterImpl(controllers);
 

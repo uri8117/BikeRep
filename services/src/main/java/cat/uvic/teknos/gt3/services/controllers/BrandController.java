@@ -1,105 +1,86 @@
 package cat.uvic.teknos.gt3.services.controllers;
 
 import cat.uvic.teknos.gt3.domain.models.Brand;
-import cat.uvic.teknos.gt3.domain.models.BrandData;
 import cat.uvic.teknos.gt3.domain.models.ModelFactory;
 import cat.uvic.teknos.gt3.domain.repositories.RepositoryFactory;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import cat.uvic.teknos.gt3.domainimplementation.entities.BrandEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 
-public class BrandController implements Controller {
+import java.io.IOException;
+
+public class BrandController implements Controller<Integer, Brand> {
 
     private final RepositoryFactory repositoryFactory;
-    private final ModelFactory modelFactory;
-    private final ObjectMapper mapper;
+    private final ObjectMapper objectMapper;
 
     public BrandController(RepositoryFactory repositoryFactory, ModelFactory modelFactory) {
         this.repositoryFactory = repositoryFactory;
-        this.modelFactory = modelFactory;
-        this.mapper = new ObjectMapper();
-
-        this.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override
     public String get(int id) {
-        var brand = repositoryFactory.getBrandRepository().get(id);
+        Brand brand = repositoryFactory.getBrandRepository().get((long) id);
         if (brand == null) {
-            throw new RuntimeException("Brand not found");
+            return "{\"message\": \"Brand not found.\"}";
         }
         try {
-            return mapper.writeValueAsString(brand);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error converting brand to JSON", e);
+            return objectMapper.writeValueAsString(brand);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "{\"message\": \"Error converting Brand to JSON.\"}";
         }
     }
 
     @Override
     public String get() {
-        var brands = repositoryFactory.getBrandRepository().getAll();
         try {
-            return mapper.writeValueAsString(brands);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error converting brands list to JSON", e);
+            return objectMapper.writeValueAsString(repositoryFactory.getBrandRepository().getAll());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "{\"message\": \"Error converting Brand list to JSON.\"}";
         }
     }
 
     @Override
-    public void post(String value) {
+    public void post(String json) {
         try {
-            JsonNode rootNode = mapper.readTree(value);
-            Brand brand = new cat.uvic.teknos.gt3.file.jbdc.models.Brand();
-            BrandData brandData = new cat.uvic.teknos.gt3.file.jbdc.models.BrandData();
-            brand.setBrandData(brandData);
-            brand.setBrandName(rootNode.get("brandName").asText());
+            JsonNode node = objectMapper.readTree(json);
 
-            if (rootNode.has("brandData")) {
-                JsonNode brandDataNode = rootNode.get("brandData");
-                brand.getBrandData().setCountryOfOrigin(brandDataNode.get("countryOfOrigin").asText());
-                brand.getBrandData().setContactInfo(brandDataNode.get("contactInfo").asText());
-            }
+            BrandEntity brandEntity = new BrandEntity();
+            brandEntity.setName(node.get("name").asText());
 
-            repositoryFactory.getBrandRepository().save(brand);
+            // Guardar la nueva BrandEntity
+            repositoryFactory.getBrandRepository().save(brandEntity);
 
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to process JSON", e);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     @Override
-    public void put(int id, String value) {
+    public void put(int id, String json) {
         try {
-            var existingBrand = repositoryFactory.getBrandRepository().get(id);
-            if (existingBrand == null) {
-                throw new RuntimeException("Brand not found");
+            JsonNode node = objectMapper.readTree(json);
+            BrandEntity brandEntity = (BrandEntity) repositoryFactory.getBrandRepository().get((long) id);
+
+            if (brandEntity != null) {
+                brandEntity.setName(node.get("name").asText());
+
+                // Actualizar la BrandEntity
+                repositoryFactory.getBrandRepository().save(brandEntity);
             }
-
-            JsonNode rootNode = mapper.readTree(value);
-            existingBrand.setBrandName(rootNode.get("brandName").asText());
-
-            if (rootNode.has("brandData")) {
-                JsonNode brandDataNode = rootNode.get("brandData");
-                existingBrand.getBrandData().setCountryOfOrigin(brandDataNode.get("countryOfOrigin").asText());
-                existingBrand.getBrandData().setContactInfo(brandDataNode.get("contactInfo").asText());
-            }
-
-            repositoryFactory.getBrandRepository().save(existingBrand);
-
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to process JSON", e);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     @Override
     public void delete(int id) {
-        var existingBrand = repositoryFactory.getBrandRepository().get(id);
-
-        if (existingBrand != null) {
-            repositoryFactory.getBrandRepository().delete(existingBrand);
-        } else {
-            throw new RuntimeException("Brand not found");
+        BrandEntity brandEntity = (BrandEntity) repositoryFactory.getBrandRepository().get((long) id);
+        if (brandEntity != null) {
+            repositoryFactory.getBrandRepository().delete(brandEntity);
         }
     }
 }

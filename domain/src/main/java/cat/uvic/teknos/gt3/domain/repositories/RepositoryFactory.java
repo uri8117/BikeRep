@@ -5,18 +5,12 @@ import java.sql.SQLException;
 
 public interface RepositoryFactory {
 
+    BikeRepository getBikeRepository();
+
     BrandRepository getBrandRepository();
 
-    BrandDataRepository getBrandDataRepository();
+    UserRepository getUserRepository();
 
-    CarRepository getCarRepository();
-
-    CarDataRepository getCarDataRepository();
-
-    CircuitRepository getCircuitRepository();
-
-    DriverRepository getDriverRepository();
-
-    RaceRepository getRaceRepository();
+    UserBikeRepository getUserBikeRepository();
 
 }

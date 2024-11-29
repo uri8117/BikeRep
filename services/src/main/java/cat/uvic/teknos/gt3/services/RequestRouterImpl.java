@@ -1,8 +1,6 @@
 package cat.uvic.teknos.gt3.services;
 
-import cat.uvic.teknos.gt3.domain.models.Car;
 import cat.uvic.teknos.gt3.services.controllers.Controller;
-import cat.uvic.teknos.gt3.services.controllers.CarController;
 import cat.uvic.teknos.gt3.services.exception.ResourceNotFoundException;
 import cat.uvic.teknos.gt3.services.exception.ServerErrorException;
 import com.fasterxml.jackson.core.JsonProcessingException;

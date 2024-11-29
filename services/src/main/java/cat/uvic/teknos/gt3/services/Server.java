@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Server {
     private static final String path = "services/src/main/resources/server.properties";
-    public final int PORT = 8080;
+    public final int PORT = 8090;
     private final RequestRouter requestRouter;
     private volatile boolean SHUTDOWN_SERVER = false;
     private final ExecutorService threadPool = Executors.newFixedThreadPool(10);

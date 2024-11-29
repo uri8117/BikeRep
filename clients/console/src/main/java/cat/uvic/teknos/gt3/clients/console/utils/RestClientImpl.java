@@ -36,6 +36,7 @@ public class RestClientImpl {
     public void put(String path, String body) throws RequestException {
         execRequest("PUT", path, body, Void.class);
     }
+
     public void delete(String path, String body) throws RequestException {
         execRequest("DELETE", path, body, Void.class);
     }
@@ -48,11 +49,12 @@ public class RestClientImpl {
                 body = "";
             }
 
+            // Configuramos la solicitud HTTP
             var request = rawHttp.parseRequest(
                     method + " " + String.format("http://%s:%d/%s", host, port, path) + " HTTP/1.1\r\n" +
                             "Host: " + host + "\r\n" +
                             "User-Agent: RawHTTP\r\n" +
-                            "Content-Length: " + body.length()+ "\r\n" +
+                            "Content-Length: " + body.length() + "\r\n" +
                             "Content-Type: application/json\r\n" +
                             "Accept: application/json\r\n" +
                             "\r\n" +
@@ -63,13 +65,20 @@ public class RestClientImpl {
 
             T returnValue = null;
             var response = rawHttp.parseResponse(socket.getInputStream()).eagerly();
+
+            // Verificar si la respuesta es un código HTTP de éxito (200 OK o 201 para POST)
+            int responseCode = response.getStatusCode();
+            if (responseCode != 200 && responseCode != 201) {
+                throw new RequestException("Request failed with HTTP code " + responseCode);
+            }
+
             if (!returnType.isAssignableFrom(Void.class)) {
                 returnValue = Mappers.get().readValue(response.getBody().get().toString(), returnType);
             }
 
             return returnValue;
         } catch (IOException e) {
-            throw new ConsoleClientException();
+            throw new RequestException("Error executing request: " + e.getMessage(), e);
         }
     }
 }

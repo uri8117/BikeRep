@@ -1,78 +1,46 @@
-DROP DATABASE IF EXISTS GT3_REP;
-CREATE DATABASE IF NOT EXISTS GT3_REP;
-USE GT3_REP;
+drop database if exists bike_rep;
+CREATE DATABASE if not exists bike_rep;
+use bike_rep;
 
--- Table to store car brands
-CREATE TABLE IF NOT EXISTS BRAND (
-                                     ID_BRAND INT PRIMARY KEY AUTO_INCREMENT,
-                                     BRAND_NAME VARCHAR(50) NOT NULL
-    );
+-- Creació de la taula 'brands' per desar les marques de bicicletes
+CREATE TABLE brands (
+                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                        name VARCHAR(255) NOT NULL,
+                        country VARCHAR(255) NOT NULL
+);
 
--- Table to store information about cars
-CREATE TABLE IF NOT EXISTS CAR (
-                                   ID_CAR INT PRIMARY KEY AUTO_INCREMENT,
-                                   ID_BRAND INT NOT NULL,
-                                   MODEL_NAME VARCHAR(50) NOT NULL,
-    FOREIGN KEY (ID_BRAND) REFERENCES BRAND(ID_BRAND) ON DELETE CASCADE
-    );
+-- Creació de la taula 'bikes' per desar les bicicletes
+CREATE TABLE bikes (
+                       id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                       model VARCHAR(255) NOT NULL,
+                       year INT NOT NULL,
+                       brand_id BIGINT NOT NULL,  -- Relació amb 'brands'
+                       CONSTRAINT fk_bikes_brand FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE CASCADE
+);
 
--- Table to store information about drivers
-CREATE TABLE IF NOT EXISTS DRIVER (
-                                      ID_DRIVER INT PRIMARY KEY AUTO_INCREMENT,
-                                      FIRST_NAME VARCHAR(50) NOT NULL,
-    LAST_NAME VARCHAR(50) NOT NULL,
-    NATIONALITY VARCHAR(50) NOT NULL,
-    BIRTHDATE DATE NOT NULL
-    );
+-- Creació de la taula 'bike_data' per desar la informació tècnica de les bicicletes
+CREATE TABLE bike_data (
+                           id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                           engine_capacity DOUBLE NOT NULL,
+                           weight DOUBLE NOT NULL,
+                           bike_id BIGINT,  -- Relació amb 'bikes'
+                           CONSTRAINT fk_bike_data_bike FOREIGN KEY (bike_id) REFERENCES bikes(id) ON DELETE CASCADE
+);
 
--- Table to store specific data about drivers (one-to-one relationship)
-CREATE TABLE IF NOT EXISTS BRAND_DATA (
-                                          ID_BRAND INT PRIMARY KEY,
-                                          COUNTRY_OF_ORIGIN VARCHAR(100),
-    CONTACT_INFO VARCHAR(255),
-    FOREIGN KEY (ID_BRAND) REFERENCES BRAND(ID_BRAND) ON DELETE CASCADE
-    );
+-- Creació de la taula 'users' per desar la informació dels usuaris
+CREATE TABLE users (
+                       id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                       name VARCHAR(255) NOT NULL,
+                       email VARCHAR(255) NOT NULL
+);
 
--- Table to store specific data about cars (one-to-one relationship)
-CREATE TABLE IF NOT EXISTS CAR_DATA (
-                                        ID_CAR INT PRIMARY KEY,
-                                        HORSEPOWER INT NOT NULL,
-                                        WEIGHT INT NOT NULL,
-                                        FOREIGN KEY (ID_CAR) REFERENCES CAR(ID_CAR) ON DELETE CASCADE
-    );
+-- Creació de la taula 'bike_user' per gestionar la relació molts-a-molts entre usuaris i bicicletes
+CREATE TABLE bike_user (
+                           bike_id BIGINT NOT NULL,
+                           user_id BIGINT NOT NULL,
+                           PRIMARY KEY (bike_id, user_id),
+                           CONSTRAINT fk_bike_user_bike FOREIGN KEY (bike_id) REFERENCES bikes(id) ON DELETE CASCADE,
+                           CONSTRAINT fk_bike_user_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
--- Table for the many-to-many relationship between drivers and cars
-CREATE TABLE IF NOT EXISTS CAR_DRIVER (
-                                          ID_CAR INT NOT NULL,
-                                          ID_DRIVER INT NOT NULL,
-                                          PRIMARY KEY (ID_CAR, ID_DRIVER),
-    FOREIGN KEY (ID_CAR) REFERENCES CAR(ID_CAR) ON DELETE CASCADE,
-    FOREIGN KEY (ID_DRIVER) REFERENCES DRIVER(ID_DRIVER) ON DELETE CASCADE
-    );
 
--- Table to store information about racing circuits
-CREATE TABLE IF NOT EXISTS CIRCUIT (
-                                       ID_CIRCUIT INT PRIMARY KEY AUTO_INCREMENT,
-                                       CIRCUIT_NAME VARCHAR(50) NOT NULL,
-    COUNTRY VARCHAR(50) NOT NULL,
-    LENGTH_KM FLOAT(5, 2) NOT NULL
-    );
-
--- Table to store information about races
-CREATE TABLE IF NOT EXISTS RACE (
-                                    ID_RACE INT PRIMARY KEY AUTO_INCREMENT,
-                                    ID_CIRCUIT INT NOT NULL,
-                                    RACE_NAME VARCHAR(50) NOT NULL,
-    RACE_DATE DATE NOT NULL,
-    FOREIGN KEY (ID_CIRCUIT) REFERENCES CIRCUIT(ID_CIRCUIT) ON DELETE CASCADE
-    );
-
--- Table for the many-to-many relationship between races and drivers with additional attributes
-CREATE TABLE IF NOT EXISTS RACE_DRIVER (
-                                           ID_RACE INT NOT NULL,
-                                           ID_DRIVER INT NOT NULL,
-                                           POSITION INT NOT NULL,
-                                           PRIMARY KEY (ID_RACE, ID_DRIVER),
-    FOREIGN KEY (ID_RACE) REFERENCES RACE(ID_RACE) ON DELETE CASCADE,
-    FOREIGN KEY (ID_DRIVER) REFERENCES DRIVER(ID_DRIVER) ON DELETE CASCADE
-    );

@@ -1,53 +1,56 @@
 package cat.uvic.teknos.gt3.clients.console.dto;
 
-import cat.uvic.teknos.gt3.domain.models.BrandData;
-import cat.uvic.teknos.gt3.domain.models.Car;
+import cat.uvic.teknos.gt3.domain.models.Bike;
+import cat.uvic.teknos.gt3.domain.models.Brand;
 
-import java.util.Set;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class BrandDto implements cat.uvic.teknos.gt3.domain.models.Brand {
-    private int id;
+public class BrandDto implements Brand {
+    private Long id;
     private String name;
-    private Set<Car> cars;
-    private BrandData brandData;
+    private String country;
+
+    private List<Bike> bikes = new ArrayList<>();
 
     @Override
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
     @Override
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
     @Override
-    public String getBrandName() {
+    public String getName() {
         return name;
     }
 
     @Override
-    public void setBrandName(String name) {
+    public void setName(String name) {
         this.name = name;
     }
 
     @Override
-    public Set<Car> getCars() {
-        return cars;
+    public String getCountry() {
+        return country;
     }
 
     @Override
-    public void setCars(Set<Car> car) {
-        this.cars = car;
+    public void setCountry(String country) {
+        this.country = country;
     }
 
     @Override
-    public BrandData getBrandData() {
-        return brandData;
+    public List<Bike> getBikes() {
+        return bikes;
     }
 
     @Override
-    public void setBrandData(BrandData brandData) {
-        this.brandData = brandData;
+    public void setBikes(List<Bike> bikes) {
+        this.bikes = bikes;
     }
 }

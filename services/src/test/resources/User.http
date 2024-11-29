@@ -1,0 +1,29 @@
+# Create a User (POST)
+### working but not the many to many
+POST http://localhost:8090/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "johndoe@example.com",
+  "bikeIds": [1, 2]
+}
+
+### Get a specific User (GET)
+GET http://localhost:8090/users/1
+
+### Get all Users (GET)
+GET http://localhost:8090/users
+
+### Update a User (PUT)
+PUT http://localhost:8090/users/2
+Content-Type: application/json
+
+{
+"name": "John Doe Updated",
+"email": "john.doe.updated@example.com",
+"bikeIds": [1, 3]
+}
+
+### Delete a User (DELETE)
+DELETE http://localhost:8090/users/1

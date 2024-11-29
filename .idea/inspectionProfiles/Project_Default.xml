@@ -5,6 +5,7 @@
       <option name="customHeaders">
         <set>
           <option value="    &quot;circuitId&quot;" />
+          <option value="    &quot;name&quot;" />
         </set>
       </option>
     </inspection_tool>

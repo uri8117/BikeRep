@@ -6,6 +6,7 @@
         <setting name="validation-enabled" value="true" />
         <setting name="provider-name" value="Hibernate" />
         <datasource-mapping>
+          <factory-entry name="BikeRep" />
           <factory-entry name="gt3.domain-implementations.jpa.main" value="b1e29f72-3875-4bd0-8214-c5e5e2bfdf4c" />
           <factory-entry name="gt3_rep_mysql" />
         </datasource-mapping>

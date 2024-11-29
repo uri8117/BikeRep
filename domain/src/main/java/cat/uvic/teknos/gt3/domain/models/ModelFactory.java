@@ -2,17 +2,11 @@ package cat.uvic.teknos.gt3.domain.models;
 
 public interface ModelFactory {
 
+    Bike createBike();
+
+    BikeData createBikeData();
+
     Brand createBrand();
 
-    BrandData createBrandData();
-
-    Car createCar();
-
-    CarData createCarData();
-
-    Circuit createCircuit();
-
-    Driver createDriver();
-
-    Race createRace();
+    User createUser();
 }
