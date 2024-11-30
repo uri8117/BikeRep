@@ -1,4 +1,4 @@
-package cat.uvic.teknos.coursemanagement.cryptoutils.exeptions;
+package cat.uvic.teknos.gt3.cryptoutils.exeptions;
 
 public class CryptoException extends RuntimeException {
     public CryptoException() {
@@ -20,3 +20,4 @@ public class CryptoException extends RuntimeException {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }
+

@@ -3,115 +3,127 @@ package cat.uvic.teknos.gt3.services;
 import cat.uvic.teknos.gt3.services.controllers.Controller;
 import cat.uvic.teknos.gt3.services.exception.ResourceNotFoundException;
 import cat.uvic.teknos.gt3.services.exception.ServerErrorException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import cat.uvic.teknos.gt3.cryptoutils.CryptoUtils;
 import rawhttp.core.RawHttp;
 import rawhttp.core.RawHttpRequest;
 import rawhttp.core.RawHttpResponse;
 
+import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.util.Map;
 
 public class RequestRouterImpl implements RequestRouter {
     private static RawHttp rawHttp = new RawHttp();
     private final Map<String, Controller> controllers;
+    private final PrivateKey privateKey;
 
     public RequestRouterImpl(Map<String, Controller> controllers) {
         this.controllers = controllers;
+        this.privateKey = loadPrivateKey();
+    }
+
+    // Carregar la clau privada des d'un KeyStore
+    private PrivateKey loadPrivateKey() {
+        try {
+            KeyStore keyStore = KeyStore.getInstance("PKCS12");
+            keyStore.load(RequestRouterImpl.class.getResourceAsStream("/server.p12"), "Teknos01.".toCharArray());
+            return (PrivateKey) keyStore.getKey("server", "Teknos01.".toCharArray());
+        } catch (KeyStoreException | UnrecoverableKeyException | IOException | NoSuchAlgorithmException | CertificateException e) {
+            throw new RuntimeException("Error loading private key", e);
+        }
     }
 
     @Override
     public RawHttpResponse<?> execRequest(RawHttpRequest request) {
-        var path = request.getUri().getPath();
-        var method = request.getMethod();
-        var pathParts = path.split("/");
+        try {
+            System.out.println("Processing request: " + request.getMethod() + " " + request.getUri().getPath());
 
-        if (pathParts.length < 2) {
-            return rawHttp.parseResponse("HTTP/1.1 400 Bad Request\r\n\r\n");
+            // Desencriptar la clau simètrica amb la clau privada
+            String encryptedKeyBase64 = request.getHeaders().get("X-Symmetric-Key").stream().findFirst()
+                    .orElseThrow(() -> new RuntimeException("No Encrypted Key Found"));
+            SecretKey symmetricKey = CryptoUtils.asymmetricDecrypt(encryptedKeyBase64, privateKey);
+            System.out.println("Symmetric key decrypted successfully");
+
+            // Desencriptar el cos de la petició
+            String decryptedBody = "";
+            if (request.getBody().isPresent()) {
+                String encryptedBody = request.getBody().get().decodeBodyToString(Charset.defaultCharset());
+                if (!encryptedBody.isEmpty()) {
+                    decryptedBody = CryptoUtils.decrypt(encryptedBody, symmetricKey);
+                }
+            }
+
+            // Processar la petició
+            var path = request.getUri().getPath();
+            var method = request.getMethod();
+            var pathParts = path.split("/");
+
+            String responseJsonBody = handleRequest(method, pathParts, decryptedBody);
+
+            // Si no hi ha resposta, retornar un array buit
+            if (responseJsonBody == null) {
+                responseJsonBody = "[]";
+            }
+
+            // Encriptar la resposta amb la clau simètrica
+            String encryptedResponse = CryptoUtils.encrypt(responseJsonBody, symmetricKey);
+            String responseHash = CryptoUtils.getHash(encryptedResponse);
+
+            // Retornar la resposta encriptada
+            return rawHttp.parseResponse(
+                    "HTTP/1.1 200 OK\r\n" +
+                            "Content-Type: application/json\r\n" +
+                            "Content-Length: " + encryptedResponse.getBytes(Charset.defaultCharset()).length + "\r\n" +
+                            "X-Body-Hash: " + responseHash + "\r\n" +
+                            "\r\n" +
+                            encryptedResponse
+            );
+
+        } catch (Exception e) {
+            System.out.println("Error processing request: " + e.getMessage());
+            e.printStackTrace();
+            return rawHttp.parseResponse("HTTP/1.1 500 Internal Server Error\r\n\r\n" + e.getMessage());
         }
+    }
 
-        var controllerName = pathParts[1];
-        var controller = controllers.get(controllerName);
+    // Gestió de la petició segons el mètode i les parts de la ruta
+    private String handleRequest(String method, String[] pathParts, String decryptedBody) throws Exception {
+        var controller = controllers.get(pathParts[1]);
 
         if (controller == null) {
-            return rawHttp.parseResponse("HTTP/1.1 404 Not Found\r\n\r\n");
+            throw new ResourceNotFoundException("Controller not found: " + pathParts[1]);
         }
 
-        String responseJsonBody = "";
+        switch (method) {
+            case "POST":
+                controller.post(decryptedBody);
+                return "{\"message\": \"Resource created successfully.\"}";
 
-        try {
-            switch (method) {
-                case "GET":
-                    if (pathParts.length == 2) {
-                        responseJsonBody = controller.get();
-                    } else {
-                        var id = Integer.parseInt(pathParts[2]);
-                        responseJsonBody = controller.get(id);
-                    }
-                    return rawHttp.parseResponse(
-                            "HTTP/1.1 200 OK\r\n" +
-                                    "Content-Type: application/json\r\n" +
-                                    "Content-Length: " + responseJsonBody.length() + "\r\n" +
-                                    "\r\n" +
-                                    responseJsonBody
-                    );
+            case "GET":
+                if (pathParts.length == 2) {
+                    return controller.get();
+                } else if (pathParts.length == 3) {
+                    return controller.get(Integer.parseInt(pathParts[2]));
+                }
+                break;
 
-                case "POST":
-                    if (!request.getBody().isPresent()) {
-                        return rawHttp.parseResponse("HTTP/1.1 400 Bad Request\r\n\r\n");
-                    }
-                    var postJson = request.getBody().get().decodeBodyToString(Charset.defaultCharset());
-                    controller.post(postJson);
-                    responseJsonBody = "{\"message\": \"Resource created successfully.\"}";
-                    return rawHttp.parseResponse(
-                            "HTTP/1.1 201 Created\r\n" +
-                                    "Content-Type: application/json\r\n" +
-                                    "Content-Length: " + responseJsonBody.length() + "\r\n" +
-                                    "\r\n" +
-                                    responseJsonBody
-                    );
+            case "PUT":
+                if (pathParts.length < 3) throw new IllegalArgumentException("ID missing for PUT request");
+                controller.put(Integer.parseInt(pathParts[2]), decryptedBody);
+                return "{\"message\": \"Resource updated successfully.\"}";
 
-                case "PUT":
-                    if (pathParts.length < 3 || !request.getBody().isPresent()) {
-                        return rawHttp.parseResponse("HTTP/1.1 400 Bad Request\r\n\r\n");
-                    }
-                    var putId = Integer.parseInt(pathParts[2]);
-                    var putJson = request.getBody().get().decodeBodyToString(Charset.defaultCharset());
-                    controller.put(putId, putJson);
-                    responseJsonBody = "{\"message\": \"Resource updated successfully.\"}";
-                    return rawHttp.parseResponse(
-                            "HTTP/1.1 200 OK\r\n" +
-                                    "Content-Type: application/json\r\n" +
-                                    "Content-Length: " + responseJsonBody.length() + "\r\n" +
-                                    "\r\n" +
-                                    responseJsonBody
-                    );
+            case "DELETE":
+                if (pathParts.length < 3) throw new IllegalArgumentException("ID missing for DELETE request");
+                controller.delete(Integer.parseInt(pathParts[2]));
+                return "{\"message\": \"Resource deleted successfully.\"}";
 
-                case "DELETE":
-                    if (pathParts.length < 3) {
-                        return rawHttp.parseResponse("HTTP/1.1 400 Bad Request\r\n\r\n");
-                    }
-                    var deleteId = Integer.parseInt(pathParts[2]);
-                    controller.delete(deleteId);
-                    responseJsonBody = "{\"message\": \"Resource deleted successfully.\"}";
-                    return rawHttp.parseResponse(
-                            "HTTP/1.1 200 OK\r\n" +
-                                    "Content-Type: application/json\r\n" +
-                                    "Content-Length: " + responseJsonBody.length() + "\r\n" +
-                                    "\r\n" +
-                                    responseJsonBody
-                    );
-
-                default:
-                    return rawHttp.parseResponse("HTTP/1.1 405 Method Not Allowed\r\n\r\n");
-            }
-        } catch (ResourceNotFoundException e) {
-            return rawHttp.parseResponse("HTTP/1.1 404 Not Found\r\n\r\n");
-        } catch (ServerErrorException e) {
-            return rawHttp.parseResponse("HTTP/1.1 500 Internal Server Error\r\n\r\n");
-        } catch (NumberFormatException | IOException e) {
-            return rawHttp.parseResponse("HTTP/1.1 400 Bad Request\r\n\r\n");
+            default:
+                throw new IllegalArgumentException("Method not allowed: " + method);
         }
+
+        return null;
     }
 }

@@ -14,6 +14,19 @@ public class BrandDto implements Brand {
 
     private List<Bike> bikes = new ArrayList<>();
 
+
+    // Add the missing field
+    private String message;
+
+    // Getters and setters for all fields
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
     @Override
     public Long getId() {
         return id;

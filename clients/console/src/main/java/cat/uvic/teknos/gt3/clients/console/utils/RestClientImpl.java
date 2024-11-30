@@ -1,24 +1,49 @@
+// RestClientImpl.java
 package cat.uvic.teknos.gt3.clients.console.utils;
 
-import cat.uvic.teknos.gt3.clients.console.exceptions.ConsoleClientException;
 import cat.uvic.teknos.gt3.clients.console.exceptions.RequestException;
+import cat.uvic.teknos.gt3.cryptoutils.CryptoUtils;
 import rawhttp.core.*;
 
+import javax.crypto.SecretKey;
 import java.io.IOException;
-import java.net.InetAddress;
+import java.io.InputStream;
 import java.net.Socket;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-
+import java.nio.charset.StandardCharsets;
+import java.security.PublicKey;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.KeyStore;
 
 public class RestClientImpl {
+
     private final int port;
     private final String host;
+    private final PublicKey publicKey;
 
     public RestClientImpl(String host, int port) {
         this.host = host;
         this.port = port;
+
+        try {
+            KeyStore keyStore = KeyStore.getInstance("PKCS12");
+            InputStream keystoreStream = RestClientImpl.class.getResourceAsStream("/client1.p12");
+            if (keystoreStream == null) {
+                throw new RuntimeException("Keystore file not found in classpath");
+            }
+            keyStore.load(keystoreStream, "Teknos01.".toCharArray());
+            Certificate serverCertificate = keyStore.getCertificate("server");
+            if (serverCertificate == null) {
+                throw new RuntimeException("Certificate with alias 'server' not found in keystore");
+            }
+            publicKey = serverCertificate.getPublicKey();
+        } catch (Exception e) {
+            throw new RuntimeException("Error loading server certificate", e);
+        }
+    }
+
+    public PublicKey getPublicKey() {
+        return publicKey;
     }
 
     public <T> T get(String path, Class<T> returnType) throws RequestException {
@@ -44,41 +69,74 @@ public class RestClientImpl {
     protected <T> T execRequest(String method, String path, String body, Class<T> returnType) throws RequestException {
         var rawHttp = new RawHttp();
         try (var socket = new Socket(host, port)) {
+            if (body == null) body = "";
 
-            if (body == null) {
-                body = "";
+            // Step 1: Generate symmetric key (for encrypting body)
+            SecretKey symmetricKey = CryptoUtils.createSecretKey();
+
+            String encryptedBody = "";
+            String hash = "";
+            if (!body.isEmpty()) {
+                encryptedBody = CryptoUtils.encrypt(body, symmetricKey);  // Encrypt the data with the symmetric key
+                hash = CryptoUtils.getHash(encryptedBody);
             }
 
-            // Configuramos la solicitud HTTP
-            var request = rawHttp.parseRequest(
-                    method + " " + String.format("http://%s:%d/%s", host, port, path) + " HTTP/1.1\r\n" +
-                            "Host: " + host + "\r\n" +
-                            "User-Agent: RawHTTP\r\n" +
-                            "Content-Length: " + body.length() + "\r\n" +
-                            "Content-Type: application/json\r\n" +
-                            "Accept: application/json\r\n" +
-                            "\r\n" +
-                            body
-            );
+            // Debugging: Print the encrypted body to check encryption
+            System.out.println("Encrypted Body: " + encryptedBody);
 
+            // Step 2: Encrypt symmetric key with public key (asymmetric encryption)
+            String encryptedKey = CryptoUtils.asymmetricEncrypt(symmetricKey, publicKey);
+
+            // Debugging: Print the encrypted symmetric key to check public key encryption
+            System.out.println("Encrypted Symmetric Key: " + encryptedKey);
+
+            // Step 3: Construct request string (headers + body)
+            String requestString = String.format(
+                    "%s http://%s:%d/%s HTTP/1.1\r\n" +
+                            "Host: %s\r\n" +
+                            "User-Agent: RawHTTP\r\n" +
+                            "Content-Length: %d\r\n" +
+                            "Content-Type: application/json\r\n" +
+                            "X-Symmetric-Key: %s\r\n" +
+                            "X-Body-Hash: %s\r\n" +
+                            "\r\n" +
+                            "%s",
+                    method, host, port, path, host, encryptedBody.length(), encryptedKey, hash, encryptedBody);
+
+            var request = rawHttp.parseRequest(requestString);
             request.writeTo(socket.getOutputStream());
+            socket.getOutputStream().flush();
 
             T returnValue = null;
             var response = rawHttp.parseResponse(socket.getInputStream()).eagerly();
 
-            // Verificar si la respuesta es un código HTTP de éxito (200 OK o 201 para POST)
             int responseCode = response.getStatusCode();
             if (responseCode != 200 && responseCode != 201) {
                 throw new RequestException("Request failed with HTTP code " + responseCode);
             }
 
             if (!returnType.isAssignableFrom(Void.class)) {
-                returnValue = Mappers.get().readValue(response.getBody().get().toString(), returnType);
+                String encryptedResponse = response.getBody().map(b -> {
+                    try {
+                        return b.asRawString(StandardCharsets.UTF_8);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).orElse("{}");
+
+                // Step 4: Decrypt response body (use symmetric key)
+                String decryptedResponse = CryptoUtils.decrypt(encryptedResponse, symmetricKey);
+
+                // Debugging: Print the decrypted response to ensure correct decryption
+                System.out.println("Decrypted Response: " + decryptedResponse);
+
+                returnValue = Mappers.get().readValue(decryptedResponse, returnType);
             }
 
             return returnValue;
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             throw new RequestException("Error executing request: " + e.getMessage(), e);
         }
     }
+
 }

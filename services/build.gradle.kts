@@ -11,6 +11,7 @@ plugins {
 dependencies {
     implementation(project(":domain"))
     implementation(project(":domain-implementations:jdbc"))
+    implementation(project(":cryptoutils"))
 
     // Spring Boot Starter para la aplicación web
     implementation("org.springframework.boot:spring-boot-starter-web")

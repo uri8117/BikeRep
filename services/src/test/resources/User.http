@@ -1,6 +1,6 @@
 # Create a User (POST)
 ### working but not the many to many
-POST http://localhost:8090/users
+POST http://localhost:8070/users
 Content-Type: application/json
 
 {
@@ -10,10 +10,10 @@ Content-Type: application/json
 }
 
 ### Get a specific User (GET)
-GET http://localhost:8090/users/1
+GET http://localhost:8070/users/1
 
 ### Get all Users (GET)
-GET http://localhost:8090/users
+GET http://localhost:8070/users
 
 ### Update a User (PUT)
 PUT http://localhost:8090/users/2

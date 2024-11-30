@@ -1,9 +1,9 @@
+// App.java
 package cat.uvic.teknos.gt3.clients.console;
 
 import cat.uvic.teknos.gt3.clients.console.exceptions.RequestException;
 import cat.uvic.teknos.gt3.clients.console.handlers.*;
 import cat.uvic.teknos.gt3.clients.console.utils.RestClientImpl;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,7 +13,7 @@ import java.io.PrintStream;
 public class App {
     private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
     private static PrintStream out = new PrintStream(System.out);
-    private static RestClientImpl restClient = new RestClientImpl("localhost", 8090);
+    private static RestClientImpl restClient = new RestClientImpl("localhost", 8070);
 
     public static void main(String[] args) throws RequestException, IOException {
 
@@ -53,17 +53,17 @@ public class App {
         return command;
     }
 
-    private static void manageBrand() throws RequestException, JsonProcessingException, IOException {
+    private static void manageBrand() throws RequestException, IOException {
         BrandCommandHandler brandHandler = new BrandCommandHandler(restClient, in);
         brandHandler.manageBrand();  // Delegating to the Brand handler
     }
 
-    private static void manageBike() throws RequestException, JsonProcessingException, IOException {
+    private static void manageBike() throws RequestException, IOException {
         BikeCommandHandler bikeHandler = new BikeCommandHandler(restClient, in);
         bikeHandler.manageBike();  // Delegating to the Bike handler
     }
 
-    private static void manageUser() throws RequestException, JsonProcessingException, IOException {
+    private static void manageUser() throws RequestException, IOException {
         UserCommandHandler userHandler = new UserCommandHandler(restClient, in);
         userHandler.manageUser();  // Delegating to the User handler
     }
